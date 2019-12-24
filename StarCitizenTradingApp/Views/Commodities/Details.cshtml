@@ -1,0 +1,50 @@
+﻿@model StarCitizenTradingApp.Models.Commodity
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Commodity</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Location.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Location.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PurchaseCost)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PurchaseCost)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.SellPrice)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.SellPrice)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

@@ -1,0 +1,54 @@
+﻿@model StarCitizenTradingApp.Models.RouteVM
+
+@{
+    ViewBag.Title = "Result";
+}
+
+<h2>Result</h2>
+
+<div>
+    <h4>RouteVM</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            <p>Commodity</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Commodity.Name)
+        </dd>
+        
+        <dt>
+            <p>Purchase at</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PurchaseLocation.Name)
+        </dd>
+
+        <dt>
+            <p>Sell at</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.SellLocation.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Quantity)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Quantity)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Profit)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Profit)
+        </dd>
+
+    </dl>
+</div>
