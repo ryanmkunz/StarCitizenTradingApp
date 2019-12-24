@@ -58,12 +58,12 @@ namespace StarCitizenTradingApp.Controllers
             var ship = db.Ships.FirstOrDefault(s => s.Id == shipid);
             var capital = input.Capital;
 
-            var route = GetRoute(ship, capital);
+            var routes = GetRoutes(ship, capital);
 
-            return View("Result", route);
+            return View("Result", routes);
         }        
 
-        public RouteVM GetRoute(Ship ship, double capital)
+        public IEnumerable<RouteVM> GetRoutes(Ship ship, double capital)
         {            
             //get all locations
             var locations = db.Locations.ToList();
@@ -111,9 +111,9 @@ namespace StarCitizenTradingApp.Controllers
             }
 
             //find most profitable route
-            var mostProfitableRoute = GetMostProfitableRoute(routes);
+            var mostProfitableRoutes = GetMostProfitableRoutes(routes);
 
-            return mostProfitableRoute;
+            return mostProfitableRoutes;
         }
 
         public List<Commodity> GetPurchaseCommodities(Location location)
@@ -165,9 +165,10 @@ namespace StarCitizenTradingApp.Controllers
             return sellLocations;
         }
 
-        public RouteVM GetMostProfitableRoute(List<RouteVM> routes)
+        public IEnumerable<RouteVM> GetMostProfitableRoutes(List<RouteVM> routes)
         {
             Dictionary<double, RouteVM> routesWithProfit = new Dictionary<double, RouteVM>();
+            List<RouteVM> mostProfitableRoutes = new List<RouteVM>();
 
             foreach (var route in routes)
             {
@@ -181,9 +182,14 @@ namespace StarCitizenTradingApp.Controllers
                 routesWithProfit.Add(profit, route);
             }
 
-            var mostProfitableRoute = routesWithProfit.OrderByDescending(r => r.Key).First().Value;
+            var topThree = routesWithProfit.OrderByDescending(r => r.Key).Take(3).ToList();
 
-            return mostProfitableRoute;
+            foreach (var item in topThree)
+            {
+                mostProfitableRoutes.Add(item.Value);
+            }            
+
+            return mostProfitableRoutes;
         }
         
     }

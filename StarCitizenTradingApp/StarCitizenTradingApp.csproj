@@ -132,6 +132,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LocationsController.cs" />
     <Compile Include="Controllers\ShipsController.cs" />
+    <Compile Include="EitherBuyOrSellAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -200,6 +201,7 @@
     <Content Include="Views\Commodities\Details.cshtml" />
     <Content Include="Views\Commodities\Edit.cshtml" />
     <Content Include="Views\Commodities\Index.cshtml" />
+    <Content Include="Views\Home\ResultPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -7,6 +7,7 @@ using System.Web;
 
 namespace StarCitizenTradingApp.Models
 {
+    [EitherBuyOrSell(ErrorMessage = "Can only have a purchase cost or sell price, other must be 0")]
     public class Commodity
     {
         [Key]

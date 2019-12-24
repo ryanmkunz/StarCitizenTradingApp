@@ -1,0 +1,47 @@
+﻿@model StarCitizenTradingApp.Models.RouteVM
+
+<div>    
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            <p>Commodity</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Commodity.Name)
+        </dd>
+        
+        <dt>
+            <p>Purchase at</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PurchaseLocation.Name)
+        </dd>
+
+        <dt>
+            <p>Sell at</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.SellLocation.Name)
+        </dd>
+
+        <dt>
+            <p>Quantity</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Quantity)
+        </dd>
+
+        <dt>
+            <p>Profit</p>
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Profit)            
+        </dd>
+
+    </dl>
+</div>
