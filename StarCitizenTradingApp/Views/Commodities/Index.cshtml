@@ -23,6 +23,9 @@
         <th>
             @Html.DisplayNameFor(model => model.SellPrice)
         </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RestockTimer)
+        </th>
         <th></th>
     </tr>
 
@@ -39,6 +42,9 @@
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.SellPrice)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.RestockTimer)
         </td>
         <td>
             @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |

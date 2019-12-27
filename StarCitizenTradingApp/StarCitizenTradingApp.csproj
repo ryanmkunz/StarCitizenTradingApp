@@ -140,10 +140,19 @@
     <Compile Include="Migrations\201912240205455_1.designer.cs">
       <DependentUpon>201912240205455_1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201912262159097_2.cs" />
+    <Compile Include="Migrations\201912262159097_2.designer.cs">
+      <DependentUpon>201912262159097_2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201912271816354_3.cs" />
+    <Compile Include="Migrations\201912271816354_3.designer.cs">
+      <DependentUpon>201912271816354_3.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Commodity.cs" />
     <Compile Include="Models\InputVM.cs" />
     <Compile Include="Models\Location.cs" />
+    <Compile Include="Models\LoopVM.cs" />
     <Compile Include="Models\RouteVM.cs" />
     <Compile Include="Models\Ship.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -202,6 +211,7 @@
     <Content Include="Views\Commodities\Edit.cshtml" />
     <Content Include="Views\Commodities\Index.cshtml" />
     <Content Include="Views\Home\ResultPartial.cshtml" />
+    <Content Include="Views\Home\LoopList.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -222,6 +232,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201912240205455_1.resx">
       <DependentUpon>201912240205455_1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201912262159097_2.resx">
+      <DependentUpon>201912262159097_2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201912271816354_3.resx">
+      <DependentUpon>201912271816354_3.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

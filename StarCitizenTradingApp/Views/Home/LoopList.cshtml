@@ -1,0 +1,18 @@
+﻿@model IEnumerable<StarCitizenTradingApp.Models.LoopVM>
+@{
+    ViewBag.Title = "LoopList";
+}
+
+<h2>LoopList</h2>
+
+@foreach (var loop in Model)
+{
+    foreach (var route in loop.Routes)
+    {
+        <div>
+            @Html.Partial("ResultPartial", route)
+        </div>
+    }    
+    <div>Total profit = <span>@loop.Profit</span></div>
+    <div>end of route</div>
+}

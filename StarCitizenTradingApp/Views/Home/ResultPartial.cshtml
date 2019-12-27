@@ -43,5 +43,17 @@
             @Html.DisplayFor(model => model.Profit)            
         </dd>
 
+        @if (Model.Commodity.RestockTimer != 0)
+        {
+            <dt>
+                <p>Restock Timer (sec.)</p>
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.Commodity.RestockTimer)
+            </dd>
+        }
+
     </dl>
 </div>
+

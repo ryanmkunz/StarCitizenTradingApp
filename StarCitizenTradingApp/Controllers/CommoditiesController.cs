@@ -49,7 +49,7 @@ namespace StarCitizenTradingApp.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Name,PurchaseCost,SellPrice,LocationId")] Commodity commodity)
+        public ActionResult Create([Bind(Include = "Id,Name,PurchaseCost,SellPrice,RestockTimer,LocationId")] Commodity commodity)
         {
             if (ModelState.IsValid)
             {
@@ -83,7 +83,7 @@ namespace StarCitizenTradingApp.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,Name,PurchaseCost,SellPrice,LocationId")] Commodity commodity)
+        public ActionResult Edit([Bind(Include = "Id,Name,PurchaseCost,SellPrice,RestockTimer,LocationId")] Commodity commodity)
         {
             if (ModelState.IsValid)
             {

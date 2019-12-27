@@ -6,12 +6,11 @@ using System.Web;
 
 namespace StarCitizenTradingApp.Models
 {
-    public class InputVM
+    public class LoopVM
     {
         [Key]
         public int Id { get; set; }
-        public int ShipId { get; set; }
-        public double Capital { get; set; }
-        public int Stops { get; set; }
+        public IEnumerable<RouteVM> Routes { get; set; }
+        public double Profit { get; set; }
     }
 }

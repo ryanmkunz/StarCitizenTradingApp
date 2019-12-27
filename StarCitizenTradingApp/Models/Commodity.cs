@@ -15,6 +15,7 @@ namespace StarCitizenTradingApp.Models
         public string Name { get; set; }
         public double PurchaseCost { get; set; }
         public double SellPrice { get; set; }
+        public int RestockTimer { get; set; }
 
         [ForeignKey("Location")]
         public int LocationId { get; set; }

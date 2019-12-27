@@ -53,35 +53,161 @@ namespace StarCitizenTradingApp.Controllers
 
         [HttpPost]
         public ActionResult Input(InputVM input)
+        {            
+            if (input.Stops == 1)
+            {
+                var shipid = input.ShipId;
+                var ship = db.Ships.FirstOrDefault(s => s.Id == shipid);
+                var capital = input.Capital;
+
+                var routes = GetRoutes(ship, capital);
+                var mostProfitableRoutes = GetMostProfitableRoutes(routes);
+
+                return View("Result", mostProfitableRoutes);
+            }
+
+            return RedirectToAction("GetLoops", input);
+        }        
+
+        public ActionResult GetLoops(InputVM input)
         {
             var shipid = input.ShipId;
             var ship = db.Ships.FirstOrDefault(s => s.Id == shipid);
             var capital = input.Capital;
 
+            var loops = GetLoopList(ship, capital, input.Stops);
+            var mostProfitableLoops = GetMostProfitableLoops(loops);
+
+            return View("LoopList", loops);
+        }
+
+        public IEnumerable<LoopVM> GetLoopList(Ship ship, double capital, int stops)
+        {
+            List<LoopVM> loops = new List<LoopVM>();
             var routes = GetRoutes(ship, capital);
 
-            return View("Result", routes);
-        }        
+            foreach (var route in routes)
+            {                
+                //get available commodities at sell point
+                var availableSecondaryCommodities = GetPurchaseCommodities(route.SellLocation);
 
-        public IEnumerable<RouteVM> GetRoutes(Ship ship, double capital)
+                //get all the routes for each available commodity at initial sell point
+                foreach (var secondaryCommodity in availableSecondaryCommodities)
+                {                    
+                    //get all the locations that purchase those commodities
+                    var secondaryPurchaseLocations = GetPurchaseLocations(secondaryCommodity);
+
+                    //get all the potential secondary routes including profit from first
+                    var secondaryRoutes = GetRoutesFromLocations(secondaryPurchaseLocations, ship, capital + route.Profit);
+
+                    foreach (var secondaryRoute in secondaryRoutes)
+                    {
+                        List<RouteVM> routeList = new List<RouteVM>();
+
+                        if (stops == 2)
+                        {
+                            if (route.SellLocation == secondaryRoute.PurchaseLocation &&
+                            secondaryRoute.SellLocation == route.PurchaseLocation)
+                            {
+                                routeList.Add(route);
+                                routeList.Add(secondaryRoute);
+
+                                LoopVM loop = new LoopVM()
+                                {
+                                    Routes = routeList,
+                                    Profit = Math.Round(route.Profit + secondaryRoute.Profit)
+                                };
+
+                                //Quick fix - for some reason each loop is added twice
+                                if (!loops.Any(l =>
+                                    l.Routes.ElementAt(0).Commodity.Id == route.Commodity.Id &&
+                                    l.Routes.ElementAt(1).Commodity.Id == secondaryRoute.Commodity.Id))
+                                {
+                                    loops.Add(loop);
+                                }
+
+                            }
+                        }
+
+                        if (stops == 3)
+                        {
+                            var availableTertiaryCommodities = GetPurchaseCommodities(secondaryRoute.SellLocation);
+
+                            foreach (var tertiaryCommodity in availableTertiaryCommodities)
+                            {
+                                var tertiaryPurchaseLocations = GetPurchaseLocations(tertiaryCommodity);
+
+                                var tertiaryRoutes = GetRoutesFromLocations
+                                    (tertiaryPurchaseLocations, ship, capital + route.Profit + secondaryRoute.Profit);
+
+                                foreach (var tertiaryRoute in tertiaryRoutes)
+                                {                                    
+                                    if (route.SellLocation == secondaryRoute.PurchaseLocation &&
+                                        secondaryRoute.SellLocation == tertiaryRoute.PurchaseLocation &&
+                                        tertiaryRoute.SellLocation == route.PurchaseLocation)
+                                    {
+                                        routeList.Add(route);
+                                        routeList.Add(secondaryRoute);
+                                        routeList.Add(tertiaryRoute);
+
+                                        LoopVM loop = new LoopVM()
+                                        {
+                                            Routes = routeList,
+                                            Profit = Math.Round(route.Profit + secondaryRoute.Profit + tertiaryRoute.Profit)
+                                        };
+
+                                        if (!loops.Any(l =>
+                                            l.Routes.ElementAt(0).Commodity.Id == route.Commodity.Id &&
+                                            l.Routes.ElementAt(1).Commodity.Id == secondaryRoute.Commodity.Id &&
+                                            l.Routes.ElementAt(2).Commodity.Id == tertiaryRoute.Commodity.Id))
+                                        {
+                                            loops.Add(loop);
+                                        }
+                                    }
+                                }
+                            }
+                        }                                                                        
+                    }                    
+                }                
+            }
+
+            return loops;
+        }
+
+        public List<RouteVM> GetRoutes(Ship ship, double capital)
         {            
             //get all locations
             var locations = db.Locations.ToList();
 
-            //attach commodities (buy/sell) to locations            
+            //attach commodities to locations            
+            locations = GetLocationData(locations);
+
+            //make list of every route for every commodity
+            var routes = GetRoutesFromLocations(locations, ship, capital);                        
+
+            return routes;
+        }
+
+        public List<Location> GetLocationData(List<Location> locations)
+        {
             foreach (var location in locations)
             {
                 location.PurchaseCommodities = GetPurchaseCommodities(location);
                 location.SellCommodities = GetSellCommodities(location);
             }
 
-            //make list of every route for every commodity
-            List<RouteVM> routes = new List<RouteVM>();
+            return locations;
+        }
 
-            foreach (var location in locations)
+        public List<RouteVM> GetRoutesFromLocations(List<Location> locations, Ship ship, double capital)
+        {
+            List<RouteVM> routes = new List<RouteVM>();
+            var sellLocationsWithData = GetLocationData(locations);
+
+            foreach (var location in sellLocationsWithData)
             {
                 foreach (var purchaseCommodity in location.PurchaseCommodities)
-                {                    
+                {
                     var sellLocations = GetSellLocations(purchaseCommodity);
 
                     foreach (var sellLocation in sellLocations)
@@ -98,24 +224,27 @@ namespace StarCitizenTradingApp.Controllers
                         }
 
                         RouteVM route = new RouteVM()
-                        {                            
+                        {
                             Commodity = purchaseCommodity,
                             PurchaseLocation = location,
                             SellLocation = sellLocation,
                             Quantity = quantity
-                        };                        
+                        };
+
+                        var totalPurchaseCost = route.Commodity.PurchaseCost * route.Quantity;
+                        var sellPrice = GetSellCommodities(sellLocation)
+                            .FirstOrDefault(c => c.Name == route.Commodity.Name).SellPrice;
+                        var totalSellPrice = sellPrice * route.Quantity;
+                        var profit = totalSellPrice - totalPurchaseCost;
+                        route.Profit = profit;
 
                         routes.Add(route);
-                    }                    
+                    }
                 }
             }
 
-            //find most profitable route
-            var mostProfitableRoutes = GetMostProfitableRoutes(routes);
-
-            return mostProfitableRoutes;
+            return routes;
         }
-
         public List<Commodity> GetPurchaseCommodities(Location location)
         {
             List<Commodity> purchaseCommodities = new List<Commodity>();
@@ -165,32 +294,61 @@ namespace StarCitizenTradingApp.Controllers
             return sellLocations;
         }
 
+        public List<Location> GetPurchaseLocations (Commodity commodity)
+        {
+            var commodities = db.Commodities.ToList();
+            List<Location> purchaseLocations = new List<Location>();
+
+            foreach (var cmdty in commodities)
+            {
+                if (cmdty.Name == commodity.Name && cmdty.PurchaseCost != 0)
+                {
+                    var location = db.Locations.FirstOrDefault(l => l.Id == cmdty.LocationId);
+                    purchaseLocations.Add(location);
+                }
+            }
+
+            return purchaseLocations;
+        }
+
         public IEnumerable<RouteVM> GetMostProfitableRoutes(List<RouteVM> routes)
         {
-            Dictionary<double, RouteVM> routesWithProfit = new Dictionary<double, RouteVM>();
+            Dictionary<RouteVM, double> routesWithProfit = new Dictionary<RouteVM, double>();
             List<RouteVM> mostProfitableRoutes = new List<RouteVM>();
 
             foreach (var route in routes)
-            {
-                var totalPurchaseCost = route.Commodity.PurchaseCost * route.Quantity;                
-                var sellCommodity = route.SellLocation.SellCommodities.FirstOrDefault(c => c.Id == route.Commodity.Id);
-                var sellPrice = db.Commodities.FirstOrDefault(c => c.Name == route.Commodity.Name && c.SellPrice != 0).SellPrice;                
-                var totalSellPrice = sellPrice * route.Quantity;
-                var profit = totalSellPrice - totalPurchaseCost;
-                route.Profit = profit;
-
-                routesWithProfit.Add(profit, route);
+            {                
+                routesWithProfit.Add(route, route.Profit);
             }
 
-            var topThree = routesWithProfit.OrderByDescending(r => r.Key).Take(3).ToList();
+            var topThree = routesWithProfit.OrderByDescending(r => r.Value).Take(3).ToList();
 
             foreach (var item in topThree)
             {
-                mostProfitableRoutes.Add(item.Value);
+                mostProfitableRoutes.Add(item.Key);
             }            
 
             return mostProfitableRoutes;
-        }
+        }          
         
+        public IEnumerable<LoopVM> GetMostProfitableLoops(IEnumerable<LoopVM> loops)
+        {
+            Dictionary<LoopVM, double> loopsWithProfit = new Dictionary<LoopVM, double>();
+            List<LoopVM> mostProfitableLoops = new List<LoopVM>();
+
+            foreach (var loop in loops)
+            {
+                loopsWithProfit.Add(loop, loop.Profit);
+            }
+
+            var topTree = loopsWithProfit.OrderByDescending(l => l.Value).Take(3).ToList();
+
+            foreach (var item in topTree)
+            {
+                mostProfitableLoops.Add(item.Key);
+            }
+
+            return mostProfitableLoops;
+        }
     }
 }
