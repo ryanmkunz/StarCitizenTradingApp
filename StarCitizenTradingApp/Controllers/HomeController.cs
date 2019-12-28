@@ -34,6 +34,15 @@ namespace StarCitizenTradingApp.Controllers
         {
             var ships = db.Ships.ToList();
             List<SelectListItem> shipList = new List<SelectListItem>();
+            List<SelectListItem> stops = new List<SelectListItem>();
+            SelectListItem one = new SelectListItem() { Text = "One", Value = "1" };
+            SelectListItem two = new SelectListItem() { Text = "Two", Value = "2" };
+            SelectListItem three = new SelectListItem() { Text = "Three", Value = "3" };
+            stops.Add(one);
+            stops.Add(two);
+            stops.Add(three);
+
+            ViewBag.Stops = stops;
 
             foreach (var ship in ships)
             {
@@ -59,7 +68,6 @@ namespace StarCitizenTradingApp.Controllers
                 var shipid = input.ShipId;
                 var ship = db.Ships.FirstOrDefault(s => s.Id == shipid);
                 var capital = input.Capital;
-
                 var routes = GetRoutes(ship, capital);
                 var mostProfitableRoutes = GetMostProfitableRoutes(routes);
 
@@ -70,15 +78,14 @@ namespace StarCitizenTradingApp.Controllers
         }        
 
         public ActionResult GetLoops(InputVM input)
-        {
+        {            
             var shipid = input.ShipId;
             var ship = db.Ships.FirstOrDefault(s => s.Id == shipid);
             var capital = input.Capital;
-
             var loops = GetLoopList(ship, capital, input.Stops);
             var mostProfitableLoops = GetMostProfitableLoops(loops);
 
-            return View("LoopList", loops);
+            return View("LoopList", mostProfitableLoops);
         }
 
         public IEnumerable<LoopVM> GetLoopList(Ship ship, double capital, int stops)
@@ -87,18 +94,14 @@ namespace StarCitizenTradingApp.Controllers
             var routes = GetRoutes(ship, capital);
 
             foreach (var route in routes)
-            {                
-                //get available commodities at sell point
+            {                                
                 var availableSecondaryCommodities = GetPurchaseCommodities(route.SellLocation);
-
-                //get all the routes for each available commodity at initial sell point
+                
                 foreach (var secondaryCommodity in availableSecondaryCommodities)
-                {                    
-                    //get all the locations that purchase those commodities
-                    var secondaryPurchaseLocations = GetPurchaseLocations(secondaryCommodity);
-
-                    //get all the potential secondary routes including profit from first
-                    var secondaryRoutes = GetRoutesFromLocations(secondaryPurchaseLocations, ship, capital + route.Profit);
+                {                                        
+                    var secondaryPurchaseLocations = GetPurchaseLocations(secondaryCommodity);                    
+                    var secondaryRoutes = GetRoutesFromLocations
+                        (secondaryPurchaseLocations, ship, capital + route.Profit);
 
                     foreach (var secondaryRoute in secondaryRoutes)
                     {
@@ -109,6 +112,7 @@ namespace StarCitizenTradingApp.Controllers
                             if (route.SellLocation == secondaryRoute.PurchaseLocation &&
                             secondaryRoute.SellLocation == route.PurchaseLocation)
                             {
+                                routeList.Clear();
                                 routeList.Add(route);
                                 routeList.Add(secondaryRoute);
 
@@ -117,15 +121,17 @@ namespace StarCitizenTradingApp.Controllers
                                     Routes = routeList,
                                     Profit = Math.Round(route.Profit + secondaryRoute.Profit)
                                 };
-
-                                //Quick fix - for some reason each loop is added twice
-                                if (!loops.Any(l =>
+                                
+                                if (loops.Count == 0 ||
+                                    !loops.Any(l =>
                                     l.Routes.ElementAt(0).Commodity.Id == route.Commodity.Id &&
-                                    l.Routes.ElementAt(1).Commodity.Id == secondaryRoute.Commodity.Id))
+                                    l.Routes.ElementAt(1).Commodity.Id == secondaryRoute.Commodity.Id) &&
+                                    !loops.Any(l =>
+                                    l.Routes.ElementAt(1).Commodity.Id == route.Commodity.Id &&
+                                    l.Routes.ElementAt(0).Commodity.Id == secondaryRoute.Commodity.Id))
                                 {
                                     loops.Add(loop);
                                 }
-
                             }
                         }
 
@@ -136,7 +142,6 @@ namespace StarCitizenTradingApp.Controllers
                             foreach (var tertiaryCommodity in availableTertiaryCommodities)
                             {
                                 var tertiaryPurchaseLocations = GetPurchaseLocations(tertiaryCommodity);
-
                                 var tertiaryRoutes = GetRoutesFromLocations
                                     (tertiaryPurchaseLocations, ship, capital + route.Profit + secondaryRoute.Profit);
 
@@ -146,6 +151,7 @@ namespace StarCitizenTradingApp.Controllers
                                         secondaryRoute.SellLocation == tertiaryRoute.PurchaseLocation &&
                                         tertiaryRoute.SellLocation == route.PurchaseLocation)
                                     {
+                                        routeList.Clear(); //this seems to be necessary
                                         routeList.Add(route);
                                         routeList.Add(secondaryRoute);
                                         routeList.Add(tertiaryRoute);
@@ -155,11 +161,20 @@ namespace StarCitizenTradingApp.Controllers
                                             Routes = routeList,
                                             Profit = Math.Round(route.Profit + secondaryRoute.Profit + tertiaryRoute.Profit)
                                         };
-
-                                        if (!loops.Any(l =>
+                                        
+                                        if (loops.Count == 0 ||
+                                            !loops.Any(l =>
                                             l.Routes.ElementAt(0).Commodity.Id == route.Commodity.Id &&
                                             l.Routes.ElementAt(1).Commodity.Id == secondaryRoute.Commodity.Id &&
-                                            l.Routes.ElementAt(2).Commodity.Id == tertiaryRoute.Commodity.Id))
+                                            l.Routes.ElementAt(2).Commodity.Id == tertiaryRoute.Commodity.Id) &&
+                                            !loops.Any(l =>
+                                            l.Routes.ElementAt(1).Commodity.Id == route.Commodity.Id &&
+                                            l.Routes.ElementAt(2).Commodity.Id == secondaryRoute.Commodity.Id &&
+                                            l.Routes.ElementAt(0).Commodity.Id == tertiaryRoute.Commodity.Id) &&
+                                            !loops.Any(l =>
+                                            l.Routes.ElementAt(2).Commodity.Id == route.Commodity.Id &&
+                                            l.Routes.ElementAt(0).Commodity.Id == secondaryRoute.Commodity.Id &&
+                                            l.Routes.ElementAt(1).Commodity.Id == tertiaryRoute.Commodity.Id))
                                         {
                                             loops.Add(loop);
                                         }
@@ -175,14 +190,9 @@ namespace StarCitizenTradingApp.Controllers
         }
 
         public List<RouteVM> GetRoutes(Ship ship, double capital)
-        {            
-            //get all locations
-            var locations = db.Locations.ToList();
-
-            //attach commodities to locations            
-            locations = GetLocationData(locations);
-
-            //make list of every route for every commodity
+        {                        
+            var locations = db.Locations.ToList();                        
+            locations = GetLocationData(locations);            
             var routes = GetRoutesFromLocations(locations, ship, capital);                        
 
             return routes;
@@ -245,6 +255,7 @@ namespace StarCitizenTradingApp.Controllers
 
             return routes;
         }
+        
         public List<Commodity> GetPurchaseCommodities(Location location)
         {
             List<Commodity> purchaseCommodities = new List<Commodity>();

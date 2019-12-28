@@ -13,8 +13,10 @@ namespace StarCitizenTradingApp.Models
         public Location PurchaseLocation { get; set; }
         public Location SellLocation { get; set; }
         public Commodity Commodity { get; set; }
+
         [DisplayFormat(DataFormatString = "{0:#,##0}")]
         public double Quantity { get; set; }
+
         [DisplayFormat(DataFormatString = "{0:#,##0}")]
         public double Profit { get; set; }
     }

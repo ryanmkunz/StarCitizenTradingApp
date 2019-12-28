@@ -11,6 +11,8 @@ namespace StarCitizenTradingApp.Models
         [Key]
         public int Id { get; set; }
         public IEnumerable<RouteVM> Routes { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0}")]
         public double Profit { get; set; }
     }
 }
